@@ -1,0 +1,43 @@
+name: Build logmonitor .deb
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc \
+            make \
+            debhelper \
+            dpkg-dev
+
+      - name: Build binary
+        run: make
+
+      - name: Build .deb
+        run: dpkg-buildpackage -us -uc -b
+
+      - name: Verify .deb exists
+        run: ls -lh ../*.deb
+
+      - name: Show package info
+        run: dpkg-deb --info ../*.deb
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: logmonitor-deb
+          path: ../*.deb
+          retention-days: 7
